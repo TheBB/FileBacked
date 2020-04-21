@@ -53,7 +53,7 @@ class FileBackedDescriptor:
     def write(self, group, obj, **kwargs):
         """Issue a call to write this object to a HDF5 group."""
         value = self.__get__(obj)
-        _write(group, self.name, value, self.tp, **kwargs)
+        write(group, self.name, value, self.tp, **kwargs)
 
     def read(self, obj, lazy=False):
         """Issue a call to read this object from a HDF5 group."""
@@ -87,7 +87,7 @@ def _getkey(obj, key, tp, exc, lazy, filekey=None):
 
     # Otherwise, get it from the file
     if obj.__filebacked_group__ and filekey in obj.__filebacked_group__:
-        value = _read(obj.__filebacked_group__[filekey], tp, lazy=lazy)
+        value = read(obj.__filebacked_group__[filekey], tp, lazy=lazy)
         obj.__filebacked_data__[key] = value
         return value
 
@@ -473,13 +473,13 @@ class BuiltinSequenceFilter:
         else:
             subgrp = group.require_group(name)
             for i, element in enumerate(obj):
-                _write(subgrp, str(i), element, eltype, **kwargs)
+                write(subgrp, str(i), element, eltype, **kwargs)
 
     def read(self, group, tp, **kwargs):
         eltype, *_ = get_args(tp)
         if _is_scalar(eltype):
             return get_origin(tp)(group[:])
-        return get_origin(tp)(_read(group[str(i)], eltype, **kwargs) for i in range(len(group)))
+        return get_origin(tp)(read(group[str(i)], eltype, **kwargs) for i in range(len(group)))
 
 
 class DictFilter:
@@ -532,7 +532,7 @@ def register_filter(flt):
     _FILTERS.insert(0, flt)
 
 
-def _write(group, name, obj, tp, **kwargs):
+def write(group, name, obj, tp=None, **kwargs):
     """Helper function for writing an object to an HDF5 group.  Tries all
     registered filters in order and delegates to the first applicable one.
     Same arguments as `Filter.write`.
@@ -541,6 +541,9 @@ def _write(group, name, obj, tp, **kwargs):
     determines whether the special pickling filter is used as a
     fallback for objects which cannot otherwise be stored.
     """
+
+    if tp is None:
+        tp = type(obj)
 
     allow_pickle = kwargs.get('allow_pickle', False)
     for flt in _FILTERS:
@@ -553,7 +556,7 @@ def _write(group, name, obj, tp, **kwargs):
     raise TypeError(f"Unable to write type '{tp}'")
 
 
-def _read(group, tp, **kwargs):
+def read(group, tp, **kwargs):
     """Helper function for writing an object to an HDF5 group.  Tries all
     registered filters in order and delegates to the first applicable one.
     Same arguments as `Filter.read`.
@@ -587,19 +590,19 @@ def _write_dict(group, obj, K, V, only=None, skip=None, **kwargs):
     # String keys are stored as-is
     if K == str:
         for attr in attribs:
-            _write(group, attr, obj[attr], V)
+            write(group, attr, obj[attr], V)
 
     # Integer keys are stored stringified
     elif K == int:
         for attr in attribs:
-            _write(group, str(attr), obj[attr], V)
+            write(group, str(attr), obj[attr], V)
 
     # Otherwise, we store as a list of (key, value) pairs
     else:
         for i, attr in enumerate(attribs):
             subgrp = group.require_group(str(i))
-            _write(subgrp, 'key', attr, K)
-            _write(subgrp, 'value', obj[attr], V)
+            write(subgrp, 'key', attr, K)
+            write(subgrp, 'value', obj[attr], V)
 
 
 def _read_dict(group, obj, K, V, **kwargs):
@@ -615,18 +618,18 @@ def _read_dict(group, obj, K, V, **kwargs):
     # String keys are stored as-is
     if K == str:
         for attr, subgrp in group.items():
-            obj[attr] = _read(subgrp, V, **kwargs)
+            obj[attr] = read(subgrp, V, **kwargs)
 
     # Integer keys are stored stringified
     elif K == int:
         for attr, subgrp in group.items():
-            obj[int(attr)] = _read(subgrp, V, **kwargs)
+            obj[int(attr)] = read(subgrp, V, **kwargs)
 
     # Otherwise, we store as a list of (key, value) pairs
     else:
         for attr, subgrp in group.items():
-            k = _read(subgrp['key'], K, **kwargs)
-            v = _read(subgrp['value'], V, **kwargs)
+            k = read(subgrp['key'], K, **kwargs)
+            v = read(subgrp['value'], V, **kwargs)
             obj[k] = v
 
 
