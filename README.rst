@@ -133,7 +133,7 @@ method of those two classes will delegate writing of attributes to the
 All the write functions take an arbitrary amount of keyword arguments
 that are passed throughout the object reference tree.  You can use
 this to customize writing behaviour.  For example, the
-``FileBacked.write`` and ``FileBackedDict.write`* methods accept the
+``FileBacked.write`` and ``FileBackedDict.write`` methods accept the
 keyword arguments *only* and *skip*, to avoid writing some attributes
 if necessary:
 
