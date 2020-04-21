@@ -4,7 +4,7 @@ from setuptools import setup
 
 setup(
     name='FileBacked',
-    version='1.0.0',
+    version='1.1.0',
     maintainer='Eivind Fonn',
     maintainer_email='evfonn@gmail.com',
     url='https://github.com/TheBB/FileBacked',
