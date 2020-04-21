@@ -4,10 +4,11 @@ from setuptools import setup
 
 setup(
     name='FileBacked',
-    version='0.0.0',
+    version='1.0.0',
     maintainer='Eivind Fonn',
     maintainer_email='evfonn@gmail.com',
-    modules=['filebacked'],
+    url='https://github.com/TheBB/FileBacked',
+    py_modules=['filebacked'],
     install_requires=[
         'dill',
         'numpy',
