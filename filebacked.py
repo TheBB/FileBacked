@@ -684,9 +684,12 @@ def _distill_attribs(attribs, only, skip):
 
 
 _SCALARS = {
-    float, np.float, np.float128, np.float64, np.float32, np.float16,
+    float, np.float, np.float64, np.float32, np.float16,
     int, np.int, np.int64, np.int32, np.int16, np.int8, np.int0,
 }
+
+if hasattr(np, 'float128'):
+    _SCALARS.add(np.float128)
 
 def _is_scalar(tp):
     """Check if a type is considered a scalar."""
