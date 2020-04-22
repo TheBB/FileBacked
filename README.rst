@@ -2,6 +2,13 @@
 FileBacked
 ==========
 
+.. image:: https://badge.fury.io/py/FileBacked.svg
+   :target: https://badge.fury.io/py/FileBacked
+
+.. image:: https://travis-ci.org/TheBB/FileBacked.svg?branch=master
+   :target: https://travis-ci.org/TheBB/FileBacked
+
+
 The FileBacked library allows you to easily define complex Python
 types which can be saved to disk in a format that is efficient,
 inspectable and interfaceable outside of Python.
