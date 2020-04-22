@@ -39,16 +39,8 @@ def lazy(request):
     return request.param
 
 
-@pytest.fixture(params=['h5py', 'pyfive'])
-def reader(request):
-    return {
-        'h5py': (lambda p: h5py.File(p, 'r')),
-        'pyfive': pyfive.File,
-    }[request.param]
-
-
 @contextmanager
-def roundtrip(obj, wkwargs, rkwargs, reader):
+def roundtrip(obj, wkwargs, rkwargs):
     with TemporaryDirectory() as path:
         path = Path(path)
         with h5py.File(path / 'out.hdf5', 'w') as f:
@@ -57,7 +49,7 @@ def roundtrip(obj, wkwargs, rkwargs, reader):
             yield (obj, ret, f)
 
 
-def test_basic_attribs(lazy, reader):
+def test_basic_attribs(lazy):
     test = BasicAttribs()
     test._int = 1
     test._str = 'FileBacked'
@@ -71,7 +63,7 @@ def test_basic_attribs(lazy, reader):
     test.intdict = {1: 2, 2: 3, 3: 1}
     test.tupledict = {('one','two'): 3, ('four', 'five'): 6}
 
-    with roundtrip(test, {}, {'lazy': lazy}, reader) as (a, b, f):
+    with roundtrip(test, {}, {'lazy': lazy}) as (a, b, f):
         assert a._int == b._int == f['_int'][()] == 1
         assert a._str == b._str == f['_str'][()].decode('utf-8') == 'FileBacked'
         assert a._float == b._float == f['_float'][()] == 3.14
@@ -108,13 +100,13 @@ def test_basic_attribs(lazy, reader):
         assert f['tupledict']['1']['value'][()] == 6
 
 
-def test_strdict(lazy, reader):
+def test_strdict(lazy):
     test = StrDict()
     test['a'] = 'alpha'
     test['b'] = 'bravo'
     test['c'] = 'charlie'
 
-    with roundtrip(test, {}, {'lazy': lazy}, reader) as (a, b, f):
+    with roundtrip(test, {}, {'lazy': lazy}) as (a, b, f):
         assert a['a'] == b['a'] == 'alpha'
         assert a['b'] == b['b'] == 'bravo'
         assert a['c'] == b['c'] == 'charlie'
@@ -126,13 +118,13 @@ def test_strdict(lazy, reader):
         assert list(b) == ['a', 'b', 'c']
 
 
-def test_intdict(lazy, reader):
+def test_intdict(lazy):
     test = IntDict()
     test[10] = 'alpha'
     test[100] = 'bravo'
     test[512] = 'charlie'
 
-    with roundtrip(test, {}, {'lazy': lazy}, reader) as (a, b, f):
+    with roundtrip(test, {}, {'lazy': lazy}) as (a, b, f):
         assert a[10] == b[10] == 'alpha'
         assert a[100] == b[100] == 'bravo'
         assert a[512] == b[512] == 'charlie'
@@ -144,14 +136,14 @@ def test_intdict(lazy, reader):
         assert list(b) == [10, 100, 512]
 
 
-def test_tupledict(lazy, reader):
+def test_tupledict(lazy):
     test = TupleDict()
     test[(1,2)] = 'alpha'
     test[(3,4,5)] = 'bravo'
     test[(6,)] = 'charlie'
     test[()] = 'delta'
 
-    with roundtrip(test, {}, {'lazy': lazy}, reader) as (a, b, f):
+    with roundtrip(test, {}, {'lazy': lazy}) as (a, b, f):
         assert a[(1,2)] == b[(1,2)] == 'alpha'
         assert a[(3,4,5)] == b[(3,4,5)] == 'bravo'
         assert a[(6,)] == b[(6,)] == 'charlie'
