@@ -169,9 +169,7 @@ File objects
 
 The standard Python package for HDF5 is h5py.  However, FileBacked
 does not itself require h5py or depend on it.  Any HDF5 package with a
-compatible interface will work.  FileBacked is tested to maintain
-compatibility with h5py for reading and writing, and with pyfive for
-reading.
+compatible interface, such as pyfive, should work.
 
 
 Initialization

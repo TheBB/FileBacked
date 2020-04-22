@@ -2,10 +2,10 @@ from contextlib import contextmanager
 from tempfile import TemporaryDirectory
 from typing import List, Tuple, Any
 from pathlib import Path
+import shutil
 
 import numpy as np
 import h5py
-import pyfive
 import pytest
 
 from filebacked import *
@@ -51,16 +51,10 @@ def reader(request):
 def roundtrip(obj, wkwargs, rkwargs, reader):
     with TemporaryDirectory() as path:
         path = Path(path)
-        with h5py.File(path / 'test.hdf5', 'w') as f:
+        with h5py.File(path / 'out.hdf5', 'w') as f:
             obj.write(f, **wkwargs)
-        with reader(path / 'test.hdf5') as f:
             ret = obj.__class__.read(f, **rkwargs)
-            assert type(ret) == type(obj)
-            if rkwargs.get('lazy', False):
-                yield (obj, ret, f)
-        if not rkwargs.get('lazy', False):
-            with reader(path / 'test.hdf5') as f:
-                yield (obj, ret, f)
+            yield (obj, ret, f)
 
 
 def test_basic_attribs(lazy, reader):
