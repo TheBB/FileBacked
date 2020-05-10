@@ -1,7 +1,7 @@
 from collections.abc import MutableMapping
 from inspect import isclass
 from itertools import chain
-from typing import Any, Dict, Generic, TypeVar, Union
+from typing import Any, Dict, Generic, TypeVar, Union, Tuple, List
 
 import dill
 import numpy as np
@@ -463,9 +463,9 @@ class BuiltinSequenceFilter:
 
     def applicable(self, tp):
         orig = get_origin(tp)
-        if orig == list:
+        if orig == list or orig == List:
             return True
-        if orig != tuple:
+        if orig != tuple and orig != Tuple:
             return False
         args = get_args(tp)
         return len(args) == 2 and args[1] == Ellipsis
@@ -481,23 +481,28 @@ class BuiltinSequenceFilter:
 
     def read(self, group, tp, **kwargs):
         eltype, *_ = get_args(tp)
+        constructor = get_origin(tp)
+        if constructor == Tuple:
+            constructor = tuple
+        elif constructor == List:
+            constructor = list
         if _is_scalar(eltype):
-            return get_origin(tp)(group[:])
-        return get_origin(tp)(read(group[str(i)], eltype, **kwargs) for i in range(len(group)))
+            return constructor(group[:])
+        return constructor(read(group[str(i)], eltype, **kwargs) for i in range(len(group)))
 
 
 class DictFilter:
     """Filter for dictionaries."""
 
     def applicable(self, tp):
-        return get_origin(tp) == dict
+        return get_origin(tp) == dict or get_origin(tp) == Dict
 
     def write(self, group, name, obj, tp, **kwargs):
-        K, V = get_args(tp)
+        K, V = get_args(tp, evaluate=True)
         _write_dict(group.require_group(name), obj, K, V, **kwargs)
 
     def read(self, group, tp, **kwargs):
-        K, V = get_args(tp)
+        K, V = get_args(tp, evaluate=True)
         retval = {}
         _read_dict(group, retval, K, V, **kwargs)
         return retval
@@ -674,7 +679,7 @@ def _my_typevars(obj, cls):
         obj = type(obj)
     for base in get_generic_bases(obj):
         if get_origin(base) == cls:
-            return get_args(base)
+            return get_args(base, evaluate=True)
     raise TypeError(f"Couldn't find type variables for {obj} relative to {cls}")
 
 
