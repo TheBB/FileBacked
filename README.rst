@@ -30,10 +30,10 @@ Define a class with attributes that are backed by disk storage.
 
 .. code-block:: python
 
-   from filebacked import FileBacked, FileBackedAttribute
+   from filebacked import FileBacked
 
    class MyClass(FileBacked):
-       myint = FileBackedAttribute(int)
+       myint: int
 
    myobj = MyClass()
    myobj.myint = 1
@@ -148,14 +148,31 @@ if necessary:
 .. code-block:: python
 
    class MyClass(FileBacked):
-       small = FileBackedAttribute(int)
-       large = FileBackedAttribute(np.ndarray)
+       small: int
+       large: np.ndarray
 
        def write(self, group, sparse=False, **kwargs):
            if sparse:
                super().write(group, skip=('small',), **kwargs)
            else:
                super().write(group, **kwargs)
+
+
+Ignoring attributes
+^^^^^^^^^^^^^^^^^^^
+
+By default, subclasses of ``FileBacked`` will handle any attributes
+with type annotations.  If you want some to be ignored, list them in
+the special ``__filebacked_ignore__`` attribute:
+
+.. code-block:: python
+
+   class MyClass(FileBacked):
+
+       __filebacked_ignore__ = ('will_not_be_saved',)
+
+       will_be_saved: int
+       will_not_be_saved: str
 
 
 Lazy reading
