@@ -72,6 +72,7 @@ The following types are supported:
   where the element type is supported
 - Dictionaries (``Dict[keytype, valuetype]``) where the key and value
   types are supported
+- Option types (``Option[valuetype]``) where the value type is supported
 - Subclasses of ``FileBacked`` and ``FileBackedDict[keytype, valuetype]``
 
 Arbitrary Python objects are stored as pickled strings if the
