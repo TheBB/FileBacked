@@ -1,7 +1,8 @@
 from collections.abc import MutableMapping
 from inspect import isclass
 from itertools import chain
-from typing import Any, Dict, Generic, TypeVar, Union, Tuple, List
+from typing import Any, Dict, Generic, TypeVar, Union, Tuple, List, Optional
+from typing import get_type_hints
 
 import dill
 import numpy as np
@@ -14,9 +15,8 @@ class FileBackedDescriptor:
     instead they are created the FileBacked metaclass when required.
     """
 
-    def __init__(self, name, tp):
+    def __init__(self, name):
         self.name = name
-        self.tp = tp
 
     def __get__(self, obj, owner=None):
         if obj is None:
@@ -35,11 +35,13 @@ class FileBackedDescriptor:
     def write(self, group, obj, **kwargs):
         """Issue a call to write this object to a HDF5 group."""
         value = self.__get__(obj)
-        write(group, self.name, value, self.tp, **kwargs)
+        tp = obj.__filebacked_annotations__[self.name]
+        write(group, self.name, value, tp, **kwargs)
 
     def read(self, obj, lazy=False):
         """Issue a call to read this object from a HDF5 group."""
-        return _getkey(obj, self.name, self.tp, AttributeError, lazy)
+        tp = obj.__filebacked_annotations__[self.name]
+        return _getkey(obj, self.name, tp, AttributeError, lazy)
 
 
 def _getkey(obj, key, tp, exc, lazy, filekey=None):
@@ -154,6 +156,7 @@ class FileBackedBase:
         self.__filebacked_group__ = group
         self.__filebacked_data__ = {}
         self.__filebacked_deleted__ = set()
+        self.__filebacked_annotations__ = get_type_hints(self.__class__)
 
         if call_pyinit:
             self.__pyinit__()
@@ -229,11 +232,11 @@ class FileBackedMeta(type):
         annotations = attrs.get('__annotations__', dict())
 
         file_attribs = set()
-        for name, tp in annotations.items():
+        for name in annotations:
             if name in ignore:
                 continue
             file_attribs.add(name)
-            attrs[name] = FileBackedDescriptor(name, tp)
+            attrs[name] = FileBackedDescriptor(name)
 
         # Track all file-backed attributes from the entire inheritance diagram
         for base in bases:
