@@ -12,19 +12,19 @@ from filebacked import *
 
 
 class BasicAttribs(FileBacked):
-    _int = FileBackedAttribute(int)
-    _str = FileBackedAttribute(str)
-    _float = FileBackedAttribute(float)
-    _opt1 = FileBackedAttribute(Optional[str])
-    _opt2 = FileBackedAttribute(Optional[str])
-    inttuple = FileBackedAttribute(Tuple[int, ...])
-    strtuple = FileBackedAttribute(Tuple[str, ...])
-    array = FileBackedAttribute(np.ndarray)
-    floatlist = FileBackedAttribute(List[float])
-    strlist = FileBackedAttribute(List[str])
-    strdict = FileBackedAttribute(Dict[str, int])
-    intdict = FileBackedAttribute(Dict[int, int])
-    tupledict = FileBackedAttribute(Dict[Tuple[str, ...], int])
+    _int: int
+    _str: str
+    _float: float
+    _opt1: Optional[str]
+    _opt2: Optional[str]
+    inttuple: Tuple[int, ...]
+    strtuple: Tuple[str, ...]
+    array: np.ndarray
+    floatlist: List[float]
+    strlist: List[str]
+    strdict: Dict[str, int]
+    intdict: Dict[int, int]
+    tupledict: Dict[Tuple[str, ...], int]
 
 class StrDict(FileBackedDict[str, str]):
     pass
@@ -148,20 +148,3 @@ def test_tupledict(lazy):
     test[(3,4,5)] = 'bravo'
     test[(6,)] = 'charlie'
     test[()] = 'delta'
-
-    with roundtrip(test, {}, {'lazy': lazy}) as (a, b, f):
-        assert a[(1,2)] == b[(1,2)] == 'alpha'
-        assert a[(3,4,5)] == b[(3,4,5)] == 'bravo'
-        assert a[(6,)] == b[(6,)] == 'charlie'
-        assert a[()] == b[()] == 'delta'
-        assert (f['0']['key'][:] == [1,2]).all()
-        assert f['0']['value'][()].decode() == 'alpha'
-        assert (f['1']['key'][:] == [3,4,5]).all()
-        assert f['1']['value'][()].decode() == 'bravo'
-        assert (f['2']['key'][:] == [6]).all()
-        assert f['2']['value'][()].decode() == 'charlie'
-        assert (f['3']['key'][:] == []).all()
-        assert f['3']['value'][()].decode() == 'delta'
-        assert len(a) == len(b) == 4
-        assert list(a) == [(1,2), (3,4,5), (6,), ()]
-        assert list(b) == [(1,2), (3,4,5), (6,), ()]

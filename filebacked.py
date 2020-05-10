@@ -8,28 +8,10 @@ import numpy as np
 from typing_inspect import get_generic_bases, get_origin, get_args
 
 
-class FileBackedAttribute:
-    """Class attribute that is backed by file storage. Usage:
-
-    class MyClass:
-        my_attr = FileBackedAttribute(type)
-
-    This is a meta-object that is decoded at type creation time, and
-    only works for classes derived from FileBacked.
-    """
-
-    def __init__(self, tp=None):
-        self.tp = tp
-
-    def descriptor(self, name):
-        return FileBackedDescriptor(name, self.tp)
-
-
 class FileBackedDescriptor:
     """Descriptor that allows attribute-like access to an object backed by
     file storage.  These objects should not be created manually,
-    instead they are created by FileBackedAttribute when the metaclass
-    requires it.
+    instead they are created the FileBacked metaclass when required.
     """
 
     def __init__(self, name, tp):
@@ -243,9 +225,15 @@ class FileBackedMeta(type):
 
     def __new__(cls, name, bases, attrs):
         # Collect all file-backed attributes from this class and convert them to descriptors
-        file_attribs = {attr for attr, obj in attrs.items() if isinstance(obj, FileBackedAttribute)}
-        for attr in file_attribs:
-            attrs[attr] = attrs[attr].descriptor(attr)
+        ignore = attrs.get('__filebacked_ignore__', set())
+        annotations = attrs.get('__annotations__', dict())
+
+        file_attribs = set()
+        for name, tp in annotations.items():
+            if name in ignore:
+                continue
+            file_attribs.add(name)
+            attrs[name] = FileBackedDescriptor(name, tp)
 
         # Track all file-backed attributes from the entire inheritance diagram
         for base in bases:
