@@ -77,7 +77,7 @@ The following types are supported:
 
 Arbitrary Python objects are stored as pickled strings if the
 *allow_pickle* keyword argument is passed to the *write* and *read*
-methods, respectively.
+methods, respectively, or if the type is ``object``.
 
 Types can be specified using standard builtins or type hint objects
 from the *typing* module, as above.

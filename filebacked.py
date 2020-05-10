@@ -575,7 +575,7 @@ def write(group, name, obj, tp=None, **kwargs):
         if flt.applicable(tp):
             flt.write(group, name, obj, tp, **kwargs)
             return
-    if allow_pickle:
+    if allow_pickle or tp == object:
         pickle_filter.write(group, name, obj, tp, **kwargs)
         return
     raise TypeError(f"Unable to write type '{tp}'")
@@ -595,7 +595,7 @@ def read(group, tp, **kwargs):
     for flt in _FILTERS:
         if flt.applicable(tp):
             return flt.read(group, tp, **kwargs)
-    if allow_pickle:
+    if allow_pickle or tp == object:
         return pickle_filter.read(group, tp, **kwargs)
     raise TypeError(f"Unable to read type '{tp}'")
 
