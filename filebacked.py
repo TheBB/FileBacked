@@ -691,7 +691,7 @@ def _subclasses(cls, root=False):
         yield cls
     for sub in cls.__subclasses__():
         yield sub
-        yield from subclasses(sub, root=False)
+        yield from _subclasses(sub, root=False)
 
 
 def _distill_attribs(attribs, only, skip):
