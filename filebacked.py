@@ -1,7 +1,7 @@
 from collections.abc import MutableMapping
 from inspect import isclass
 from itertools import chain
-from typing import Any, Dict, Generic, TypeVar
+from typing import Any, Dict, Generic, TypeVar, Union
 
 import dill
 import numpy as np
@@ -90,6 +90,10 @@ def _getkey(obj, key, tp, exc, lazy, filekey=None):
         value = read(obj.__filebacked_group__[filekey], tp, lazy=lazy)
         obj.__filebacked_data__[key] = value
         return value
+
+    # If the type is of option type, it's missing
+    elif _is_option(tp):
+        return None
 
     raise exc(key)
 
@@ -499,6 +503,21 @@ class DictFilter:
         return retval
 
 
+class OptionFilter:
+    """Filter for Option[T] types."""
+
+    def applicable(self, tp):
+        return _is_option(tp)
+
+    def write(self, group, name, obj, tp, **kwargs):
+        if obj is not None:
+            write(group, name, obj, **kwargs)
+
+    def read(self, group, tp, **kwargs):
+        T, _ = get_args(tp)
+        return read(group, T, **kwargs)
+
+
 class PickleFilter:
     """Filter for I/O of arbitrary Python objects, stored as pickled
     strings.
@@ -520,6 +539,7 @@ _FILTERS = [
     ScalarFilter(),
     NumpyFilter(),
     BuiltinSequenceFilter(),
+    OptionFilter(),
     DictFilter(),
 ]
 
@@ -694,3 +714,11 @@ if hasattr(np, 'float128'):
 def _is_scalar(tp):
     """Check if a type is considered a scalar."""
     return tp in _SCALARS
+
+def _is_option(tp):
+    """Return true if tp is an option type."""
+    orig = get_origin(tp)
+    if orig != Union:
+        return False
+    args = get_args(tp)
+    return args[1] == type(None)

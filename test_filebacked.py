@@ -1,6 +1,6 @@
 from contextlib import contextmanager
 from tempfile import TemporaryDirectory
-from typing import List, Tuple, Any
+from typing import List, Tuple, Any, Optional
 from pathlib import Path
 import shutil
 
@@ -15,6 +15,8 @@ class BasicAttribs(FileBacked):
     _int = FileBackedAttribute(int)
     _str = FileBackedAttribute(str)
     _float = FileBackedAttribute(float)
+    _opt1 = FileBackedAttribute(Optional[str])
+    _opt2 = FileBackedAttribute(Optional[str])
     inttuple = FileBackedAttribute(Tuple[int, ...])
     strtuple = FileBackedAttribute(Tuple[str, ...])
     array = FileBackedAttribute(np.ndarray)
@@ -54,6 +56,8 @@ def test_basic_attribs(lazy):
     test._int = 1
     test._str = 'FileBacked'
     test._float = 3.14
+    test._opt1 = 'has'
+    test._opt2 = None
     test.inttuple = (1, 2, 3)
     test.strtuple = ('alpha', 'bravo', 'charlie')
     test.array = np.eye(3, 3, dtype=float)
@@ -67,6 +71,8 @@ def test_basic_attribs(lazy):
         assert a._int == b._int == f['_int'][()] == 1
         assert a._str == b._str == f['_str'][()].decode('utf-8') == 'FileBacked'
         assert a._float == b._float == f['_float'][()] == 3.14
+        assert a._opt1 == 'has'
+        assert a._opt2 is None
         assert a.inttuple == b.inttuple == tuple(f['inttuple'][:]) == (1, 2, 3)
         assert a.strtuple == b.strtuple == ('alpha', 'bravo', 'charlie')
         assert f['strtuple']['0'][()].decode('utf-8') == 'alpha'
