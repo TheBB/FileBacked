@@ -5,6 +5,7 @@ from pathlib import Path
 import shutil
 
 import numpy as np
+import scipy.sparse as sparse
 import h5py
 import pytest
 
@@ -28,6 +29,9 @@ class BasicAttribs(FileBacked):
     union1: Union[int, str, float]
     union2: Union[int, str, float]
     union3: Union[int, str, float]
+    csc: sparse.spmatrix
+    csr: sparse.spmatrix
+    coo: sparse.spmatrix
 
 class StrDict(FileBackedDict[str, str]):
     pass
@@ -72,6 +76,9 @@ def test_basic_attribs(lazy):
     test.union1 = 1
     test.union2 = 'alpha'
     test.union3 = 4.5
+    test.csc = sparse.eye(3, format='csc')
+    test.csr = sparse.eye(3, format='csr')
+    test.coo = sparse.eye(3, format='coo')
 
     with roundtrip(test, {}, {'lazy': lazy}) as (a, b, f):
         assert a._int == b._int == f['_int'][()] == 1
@@ -113,6 +120,12 @@ def test_basic_attribs(lazy):
         assert a.union1 == 1
         assert a.union2 == 'alpha'
         assert a.union3 == 4.5
+        assert a.csc.getformat() == 'csc'
+        assert (a.csc != sparse.eye(3)).nnz == 0
+        assert a.csr.getformat() == 'csr'
+        assert (a.csr != sparse.eye(3)).nnz == 0
+        assert a.coo.getformat() == 'coo'
+        assert (a.coo != sparse.eye(3)).nnz == 0
 
 
 def test_strdict(lazy):

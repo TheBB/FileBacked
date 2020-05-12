@@ -17,6 +17,7 @@ setup(
     install_requires=[
         'dill',
         'numpy',
+        'scipy',
         'typing_inspect',
     ],
 )

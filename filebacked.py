@@ -6,6 +6,7 @@ from typing import get_type_hints
 
 import dill
 import numpy as np
+import scipy.sparse as sparse
 from typing_inspect import get_generic_bases, get_origin, get_args
 
 
@@ -437,7 +438,7 @@ class ScalarFilter:
 
 
 class NumpyFilter:
-    """Filter for I/O of numpy n-dimensional arrays."""
+    """Filter for I/O of Numpy n-dimensional arrays."""
 
     def applicable(self, tp):
         return isclass(tp) and tp == np.ndarray
@@ -447,6 +448,35 @@ class NumpyFilter:
 
     def read(self, group, tp, **kwargs):
         return group[:]
+
+
+class ScipySparseFilter:
+    """Filter for I/O of Scipy sparse matrices."""
+
+    def applicable(self, tp):
+        return isclass(tp) and issubclass(tp, sparse.spmatrix)
+
+    def write(self, group, name, obj, tp, **kwargs):
+        subgrp = group.require_group(name)
+        subgrp['data'] = obj.data
+        subgrp.attrs['format'] = obj.getformat()
+        subgrp.attrs['m'], subgrp.attrs['n'] = obj.shape
+        if isinstance(obj, sparse.coo_matrix):
+            subgrp['row'] = obj.row
+            subgrp['col'] = obj.col
+        else:
+            subgrp['indices'] = obj.indices
+            subgrp['indptr'] = obj.indptr
+
+    def read(self, group, tp, **kwargs):
+        data = group['data'][:]
+        shape = (group.attrs['m'], group.attrs['n'])
+        fmt = group.attrs['format']
+        if fmt == 'coo':
+            return sparse.coo_matrix((data, (group['row'][:], group['col'][:])), shape=shape)
+        else:
+            constructor = {'csr': sparse.csr_matrix, 'csc': sparse.csc_matrix}[fmt]
+            return constructor((data, group['indices'][:], group['indptr'][:]), shape=shape)
 
 
 class BuiltinSequenceFilter:
@@ -556,6 +586,7 @@ _FILTERS = [
     StringFilter(),
     ScalarFilter(),
     NumpyFilter(),
+    ScipySparseFilter(),
     BuiltinSequenceFilter(),
     OptionFilter(),
     UnionFilter(),

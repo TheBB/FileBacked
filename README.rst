@@ -68,6 +68,9 @@ The following types are supported:
 - Scalar numbers (*int*, *float* and numpy scalar types)
 - Strings (*str*)
 - Numpy arrays (``numpy.ndarray``)
+- Scipy sparse matrices (``scipy.sparse.spmatrix``) of CSR, CSC and
+  COO type (although you are free to give the type hint as the general
+  *spmatrix* superclass)
 - Homogeneous tuples (``Tuple[eltype, ...]``) and lists (``List[eltype]``)
   where the element type is supported
 - Dictionaries (``Dict[keytype, valuetype]``) where the key and value
