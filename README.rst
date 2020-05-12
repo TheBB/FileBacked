@@ -73,6 +73,8 @@ The following types are supported:
 - Dictionaries (``Dict[keytype, valuetype]``) where the key and value
   types are supported
 - Option types (``Option[valuetype]``) where the value type is supported
+- Union types with arguments that support type checking with
+  ``isinstance(..., arg)``
 - Subclasses of ``FileBacked`` and ``FileBackedDict[keytype, valuetype]``
 
 Arbitrary Python objects are stored as pickled strings if the

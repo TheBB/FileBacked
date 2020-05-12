@@ -510,8 +510,30 @@ class OptionFilter:
             write(group, name, obj, **kwargs)
 
     def read(self, group, tp, **kwargs):
-        T, _ = get_args(tp)
+        T, _ = get_args(tp, evaluate=True)
         return read(group, T, **kwargs)
+
+
+class UnionFilter:
+    """Filter for Union[...] types.
+
+    Only works for 'simple' arguments.
+    """
+
+    def applicable(self, tp):
+        return get_origin(tp) == Union
+
+    def write(self, group, name, obj, tp, **kwargs):
+        for i, subtp in enumerate(get_args(tp, evaluate=True)):
+            if isinstance(obj, subtp):
+                write(group, name, obj, subtp, **kwargs)
+                group[name].attrs['typeid'] = i
+                return
+        raise TypeError(type(obj))
+
+    def read(self, group, tp, **kwargs):
+        subtp = get_args(tp, evaluate=True)[group.attrs['typeid']]
+        return read(group, subtp, **kwargs)
 
 
 class PickleFilter:
@@ -536,6 +558,7 @@ _FILTERS = [
     NumpyFilter(),
     BuiltinSequenceFilter(),
     OptionFilter(),
+    UnionFilter(),
     DictFilter(),
 ]
 

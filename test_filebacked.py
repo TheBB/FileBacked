@@ -25,6 +25,9 @@ class BasicAttribs(FileBacked):
     strdict: Dict[str, int]
     intdict: Dict[int, int]
     tupledict: Dict[Tuple[str, ...], int]
+    union1: Union[int, str, float]
+    union2: Union[int, str, float]
+    union3: Union[int, str, float]
 
 class StrDict(FileBackedDict[str, str]):
     pass
@@ -66,6 +69,9 @@ def test_basic_attribs(lazy):
     test.strdict = {'alpha': 1, 'beta': 2, 'gamma': 3}
     test.intdict = {1: 2, 2: 3, 3: 1}
     test.tupledict = {('one','two'): 3, ('four', 'five'): 6}
+    test.union1 = 1
+    test.union2 = 'alpha'
+    test.union3 = 4.5
 
     with roundtrip(test, {}, {'lazy': lazy}) as (a, b, f):
         assert a._int == b._int == f['_int'][()] == 1
@@ -104,6 +110,9 @@ def test_basic_attribs(lazy):
         assert f['tupledict']['1']['key']['0'][()].decode('utf-8') == 'four'
         assert f['tupledict']['1']['key']['1'][()].decode('utf-8') == 'five'
         assert f['tupledict']['1']['value'][()] == 6
+        assert a.union1 == 1
+        assert a.union2 == 'alpha'
+        assert a.union3 == 4.5
 
 
 def test_strdict(lazy):
