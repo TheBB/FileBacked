@@ -7,7 +7,7 @@ with open('README.rst', 'r') as f:
 
 setup(
     name='FileBacked',
-    version='2.0.0',
+    version='2.1.0',
     description='Simple file-backed HDF5 storage for Python objects',
     long_description=readme,
     maintainer='Eivind Fonn',
