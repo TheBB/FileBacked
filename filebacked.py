@@ -227,7 +227,7 @@ class FileBackedBase:
 class FileBackedMeta(type):
     """Metaclass for file-backed objects."""
 
-    def __new__(cls, name, bases, attrs):
+    def __new__(cls, clsname, bases, attrs):
         # Collect all file-backed attributes from this class and convert them to descriptors
         ignore = attrs.get('__filebacked_ignore__', set())
         annotations = attrs.get('__annotations__', dict())
@@ -244,7 +244,7 @@ class FileBackedMeta(type):
             file_attribs |= set(getattr(base, '__filebacked_attribs__', []))
         attrs['__filebacked_attribs__'] = sorted(file_attribs)
 
-        return super().__new__(cls, name, bases, attrs)
+        return super().__new__(cls, clsname, bases, attrs)
 
 
 class FileBacked(FileBackedBase, metaclass=FileBackedMeta):
